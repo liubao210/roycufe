@@ -42,7 +42,7 @@ pre {
   line-height: 1.2em;
   margin: 0;
   overflow: auto;
-
+  background-color: rgba(0,0,0,0.15) !important;
   // A larger monospaced block of text (that isn't mixed with normal text)
   // generally looks heavier than normal text with the same font size. For this
   // reason using a smaller monospaced font size makes sense in this situation.

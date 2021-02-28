@@ -11,7 +11,7 @@ tags:
 
 
 
-  *“There are definitely some academic statisticians who just don’t understand why what I do is statistics, but basically I think they are all wrong . What I do is fundamentally statistics. The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about. It is gaining insight from data using modelling and visualization. Data munging and manipulation is hard and statistics has just said that’s not our domain.”* _ **Hadley Wickham**
+  *“There are definitely some academic statisticians who just don’t understand why what I do is statistics, but basically I think they are all wrong . What I do is fundamentally statistics. The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about. It is gaining insight from data using modelling and visualization. Data munging and manipulation is hard and statistics has just said that’s not our domain.” _ Hadley Wickham*
 
   数据的清理是数据统计分析的第一步，通常也是最耗时费力的一步，这通常给多数没有接触过编程的学者带来很多麻烦。
   对于没有编程基础的人而言，为了解决一个简单的问题去学习base R的数据处理或者pandas等会耗费很多时间，投入产出不划算。  
