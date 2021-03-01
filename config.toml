@@ -18,7 +18,7 @@ paginate = 10
   description = "Welcome! :)"
   description_2 = "Tel/wechat: 13051897793"
   description_3 = "Email: roycufe@gmail.com"
-  description_4 = ""
+  description_4 = " "
   menu_item_separator = " - "
   favicon = "shutu.ico"
   [[params.social]]
