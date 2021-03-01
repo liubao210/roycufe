@@ -15,10 +15,12 @@ paginate = 10
 
 [params]
   author = "Roy"
-  description = "Author: 刘保 \n Tel: 13051897793"
-  description_2 = "Author: 刘保 \n Tel: 13051897793"
+  description = "Welcome! :)"
+  description_2 = "Tel/wechat: 13051897793"
+  description_3 = "Email: roycufe@gmail.com"
+  description_4 = ""
   menu_item_separator = " - "
-  favicon = "/assets/shutu.ico"
+  favicon = "shutu.ico"
   [[params.social]]
     name = "github"
     url = "https://github.com/liubao210"
