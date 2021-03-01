@@ -5,9 +5,13 @@ paginate = 10
 
 [menu]
   [[menu.main]]
+    identifier = "back"
+    name = "back"
+    url = "/"
+  [[menu.main]]
     identifier = "home"
     name = "Home"
-    url = "/"
+    url = "http://shiny.baoliu.ink/home/"
   [[menu.main]]
     identifier = "tags"
     name = "Tags"
