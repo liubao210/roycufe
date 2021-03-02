@@ -7,6 +7,16 @@ categories:
   - R
 tags:
   - dplyr
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+      
+    df_print: paged
+    theme: cerulean
 ---
 
 
@@ -20,11 +30,11 @@ tags:
 | 函数名称            | 主要作用              | 备注   |
 | :----:              | :----:                | :----: |
 |   select            |  选择指定的列         |        |
-| filter              |  选择指定的行         |        |
-|  arrange            |  排序                 |        |
-| mutate              |  修改、新增列         |        |
-|  summarise          |  汇总计算             |        |
-| group_by            |  分组                 |        |
+|   filter            |  选择指定的行         |        |
+|   arrange           |  排序                 |        |
+|   mutate            |  修改、新增列         |        |
+|   summarise         |  汇总计算             |        |
+|   group_by          |  分组                 |        |
 
   
   下面为大家一一介绍。
