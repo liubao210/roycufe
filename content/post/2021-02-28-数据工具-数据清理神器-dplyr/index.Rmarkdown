@@ -27,14 +27,14 @@ output:
   对于没有编程基础的人而言，为了解决一个简单的问题去学习base R的数据处理或者pandas等会耗费很多时间，投入产出不划算。  
   **dplyr**的设计就是为了解决这个问题，它通过select、filter、 arrange、mutate、summarise、group_by等容易理解和记忆的函数，极大的简化了数据清理的过程。
   
-| 函数名称            | 主要作用              | 备注   |
-| :----:              | :----:                | :----: |
-|   select            |  选择指定的列         |        |
-|   filter            |  选择指定的行         |        |
-|   arrange           |  排序                 |        |
-|   mutate            |  修改、新增列         |        |
-|   summarise         |  汇总计算             |        |
-|   group_by          |  分组                 |        |
+<!-- | 函数名称            | 主要作用              | 备注   | -->
+<!-- | :----:              | :----:                | :----: | -->
+<!-- |   select            |  选择指定的列         |        | -->
+<!-- |   filter            |  选择指定的行         |        | -->
+<!-- |   arrange           |  排序                 |        | -->
+<!-- |   mutate            |  修改、新增列         |        | -->
+<!-- |   summarise         |  汇总计算             |        | -->
+<!-- |   group_by          |  分组                 |        | -->
 
   
   下面为大家一一介绍。
@@ -51,10 +51,39 @@ if(!"dplyr" %in% installed.packages()){
 library(dplyr)
 ```
 
-```{r}
 
+**构建一个简单数据集**
+
+```{r}
+scores = data.frame(
+  name = c("zhangsan", "lisi", "wangwu"),
+  gender = c("F", "M", "F"),
+  math = c(90, 87, 92)
+)
+
+scores
 ```
 
+## 基本用法
+
+**新建一列 mutate**
+
+**排序 arrange**
+
+**选择列 select**
+
+**选择符合条件的行**
+
+**汇总计算**
+
+**分组 group_by**
+
+## 其他常用方法
+
+**表连接**
+
+
+**列重命名**
 
 
 #### —————————————————— 
