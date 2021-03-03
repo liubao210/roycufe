@@ -7,7 +7,9 @@ categories:
   - R
 tags:
   - dplyr
+df_print: paged
 output: 
+  df_print: paged
   html_document:
     toc: true
     toc_depth: 4
@@ -50,6 +52,9 @@ if(!"dplyr" %in% installed.packages()){
   }
 
 library(dplyr)
+
+# 同时加载knitr， 方便数据展示
+library(knitr)
 ```
 
 
@@ -63,15 +68,16 @@ scores <-  data.frame(
   math = c(90, 87, 92)
 )
 
-scores
+kable(scores)
 ```
 
-```
-##       name gender math
-## 1 zhangsan      F   90
-## 2     lisi      M   87
-## 3   wangwu      F   92
-```
+
+
+|name     |gender | math|
+|:--------|:------|----:|
+|zhangsan |F      |   90|
+|lisi     |M      |   87|
+|wangwu   |F      |   92|
 
 ## 基本用法
 
@@ -79,42 +85,31 @@ scores
 
 ```r
 # 新建一列英文成绩
-scores = mutate(scores, eng = c(77, 93, 81))
-scores
-```
-
-```
-##       name gender math eng
-## 1 zhangsan      F   90  77
-## 2     lisi      M   87  93
-## 3   wangwu      F   92  81
-```
-
-```r
+scores <- mutate(scores, eng = c(77, 93, 81))
 # 新建一列均分
-scores = mutate(scores, mean_score = (math + eng) / 2)
-scores
-```
+scores <- mutate(scores, mean_score = (math + eng) / 2)
 
-```
-##       name gender math eng mean_score
-## 1 zhangsan      F   90  77       83.5
-## 2     lisi      M   87  93       90.0
-## 3   wangwu      F   92  81       86.5
-```
 
-```r
 # 使用管道符的写法
-scores = scores %>% mutate(eng = c(77, 93, 81))
-scores
+scores <- scores %>% 
+  mutate(eng = c(77, 93, 81)) %>% 
+  mutate(mean_score = (math + eng) / 2)
+
+# 同时生成多列
+scores <- scores %>% 
+  mutate(eng = c(77, 93, 81),
+         mean_score = (math + eng) / 2)
+
+kable(scores)
 ```
 
-```
-##       name gender math eng mean_score
-## 1 zhangsan      F   90  77       83.5
-## 2     lisi      M   87  93       90.0
-## 3   wangwu      F   92  81       86.5
-```
+
+
+|name     |gender | math| eng| mean_score|
+|:--------|:------|----:|---:|----------:|
+|zhangsan |F      |   90|  77|       83.5|
+|lisi     |M      |   87|  93|       90.0|
+|wangwu   |F      |   92|  81|       86.5|
 
 **管道符**
 dplyr提供了非常方便的管道符, 最常用的是 %>% ，它的作用是把管道符前的内容，当作变量传递给后面的方法。这个管道符可以通过快捷键 “Ctrl + Shift + M”输入(赋值符号 <- 可以通过快捷键 “Alt + -”输入)。  
@@ -128,61 +123,50 @@ dplyr提供了非常方便的管道符, 最常用的是 %>% ，它的作用是�
 
 ```r
 # 把成绩数据按照数学成绩升序排序
-arrange(scores, math)
+scores <- arrange(scores, math)
+kable(scores)
 ```
 
-```
-##       name gender math eng mean_score
-## 1     lisi      M   87  93       90.0
-## 2 zhangsan      F   90  77       83.5
-## 3   wangwu      F   92  81       86.5
-```
+
+
+|name     |gender | math| eng| mean_score|
+|:--------|:------|----:|---:|----------:|
+|lisi     |M      |   87|  93|       90.0|
+|zhangsan |F      |   90|  77|       83.5|
+|wangwu   |F      |   92|  81|       86.5|
 
 ```r
 # 把成绩数据按照数学、英语成绩升序排序
-arrange(scores, math, eng)
+scores <- arrange(scores, math, eng)
+kable(scores)
 ```
 
-```
-##       name gender math eng mean_score
-## 1     lisi      M   87  93       90.0
-## 2 zhangsan      F   90  77       83.5
-## 3   wangwu      F   92  81       86.5
-```
+
+
+|name     |gender | math| eng| mean_score|
+|:--------|:------|----:|---:|----------:|
+|lisi     |M      |   87|  93|       90.0|
+|zhangsan |F      |   90|  77|       83.5|
+|wangwu   |F      |   92|  81|       86.5|
 
 ```r
 # 把成绩数据按照数学成绩降序排序
-arrange(scores, desc(math))
+scores <- arrange(scores, desc(math))
+kable(scores)
 ```
 
-```
-##       name gender math eng mean_score
-## 1   wangwu      F   92  81       86.5
-## 2 zhangsan      F   90  77       83.5
-## 3     lisi      M   87  93       90.0
-```
+
+
+|name     |gender | math| eng| mean_score|
+|:--------|:------|----:|---:|----------:|
+|wangwu   |F      |   92|  81|       86.5|
+|zhangsan |F      |   90|  77|       83.5|
+|lisi     |M      |   87|  93|       90.0|
 
 ```r
 # 使用管道符书写
-scores %>% arrange(math)
-```
-
-```
-##       name gender math eng mean_score
-## 1     lisi      M   87  93       90.0
-## 2 zhangsan      F   90  77       83.5
-## 3   wangwu      F   92  81       86.5
-```
-
-```r
-scores %>% arrange(desc(math))
-```
-
-```
-##       name gender math eng mean_score
-## 1   wangwu      F   92  81       86.5
-## 2 zhangsan      F   90  77       83.5
-## 3     lisi      M   87  93       90.0
+scores <- scores %>% arrange(math)
+scores <- scores %>% arrange(desc(math))
 ```
 
 
@@ -194,49 +178,24 @@ scores %>% arrange(desc(math))
 ```r
 # 删除均分mean_score列
 ## 减号待变从原数据删除某列
-select(scores, -mean_score)
-```
-
-```
-##       name gender math eng
-## 1 zhangsan      F   90  77
-## 2     lisi      M   87  93
-## 3   wangwu      F   92  81
-```
-
-```r
+new_data <- select(scores, -mean_score)
 ## 若不使用减号，代表仅取出指定的列
-select(scores, name, gender, math)
+new_data <- select(scores, name, gender, math)
+kable(new_data)
 ```
 
-```
-##       name gender math
-## 1 zhangsan      F   90
-## 2     lisi      M   87
-## 3   wangwu      F   92
-```
+
+
+|name     |gender | math|
+|:--------|:------|----:|
+|wangwu   |F      |   92|
+|zhangsan |F      |   90|
+|lisi     |M      |   87|
 
 ```r
 # 管道符
-scores %>% select(-mean_score)
-```
-
-```
-##       name gender math eng
-## 1 zhangsan      F   90  77
-## 2     lisi      M   87  93
-## 3   wangwu      F   92  81
-```
-
-```r
-scores %>% select( gender, math, name)
-```
-
-```
-##   gender math     name
-## 1      F   90 zhangsan
-## 2      M   87     lisi
-## 3      F   92   wangwu
+new_data <- scores %>% select(-mean_score)
+new_data <- scores %>% select( gender, math, name)
 ```
 
 

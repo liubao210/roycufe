@@ -7,7 +7,9 @@ categories:
   - R
 tags:
   - dplyr
+df_print: paged
 output: 
+  df_print: paged
   html_document:
     toc: true
     toc_depth: 4
@@ -49,6 +51,9 @@ if(!"dplyr" %in% installed.packages()){
   }
 
 library(dplyr)
+
+# 同时加载knitr， 方便数据展示
+library(knitr)
 ```
 
 
@@ -61,7 +66,7 @@ scores <-  data.frame(
   math = c(90, 87, 92)
 )
 
-scores
+kable(scores)
 ```
 
 ## 基本用法
@@ -69,15 +74,22 @@ scores
 **新建一列 mutate**
 ```{r mutate}
 # 新建一列英文成绩
-scores = mutate(scores, eng = c(77, 93, 81))
-scores
+scores <- mutate(scores, eng = c(77, 93, 81))
 # 新建一列均分
-scores = mutate(scores, mean_score = (math + eng) / 2)
-scores
+scores <- mutate(scores, mean_score = (math + eng) / 2)
+
 
 # 使用管道符的写法
-scores = scores %>% mutate(eng = c(77, 93, 81))
-scores
+scores <- scores %>% 
+  mutate(eng = c(77, 93, 81)) %>% 
+  mutate(mean_score = (math + eng) / 2)
+
+# 同时生成多列
+scores <- scores %>% 
+  mutate(eng = c(77, 93, 81),
+         mean_score = (math + eng) / 2)
+
+kable(scores)
 ```
 
 **管道符**
@@ -91,16 +103,20 @@ dplyr提供了非常方便的管道符, 最常用的是 %>% ，它的作用是�
 
 ```{r}
 # 把成绩数据按照数学成绩升序排序
-arrange(scores, math)
+scores <- arrange(scores, math)
+kable(scores)
+
 # 把成绩数据按照数学、英语成绩升序排序
-arrange(scores, math, eng)
+scores <- arrange(scores, math, eng)
+kable(scores)
 
 # 把成绩数据按照数学成绩降序排序
-arrange(scores, desc(math))
+scores <- arrange(scores, desc(math))
+kable(scores)
 
 # 使用管道符书写
-scores %>% arrange(math)
-scores %>% arrange(desc(math))
+scores <- scores %>% arrange(math)
+scores <- scores %>% arrange(desc(math))
 ```
 
 
@@ -111,13 +127,14 @@ scores %>% arrange(desc(math))
 ```{r}
 # 删除均分mean_score列
 ## 减号待变从原数据删除某列
-select(scores, -mean_score)
+new_data <- select(scores, -mean_score)
 ## 若不使用减号，代表仅取出指定的列
-select(scores, name, gender, math)
+new_data <- select(scores, name, gender, math)
+kable(new_data)
 
 # 管道符
-scores %>% select(-mean_score)
-scores %>% select( gender, math, name)
+new_data <- scores %>% select(-mean_score)
+new_data <- scores %>% select( gender, math, name)
 ```
 
 
