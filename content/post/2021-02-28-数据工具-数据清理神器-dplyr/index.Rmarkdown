@@ -227,7 +227,7 @@ kable(new_data)
 ```
 
 
-**纵向拼接**  a
+**纵向拼接**
 
 ```{r}
 # 一个简单的学生成绩表
@@ -264,7 +264,7 @@ new_data <- scores %>%
   select(姓名 = name, 性别 = gender)
 kable(new_data)
 
-# 使用mutate命名
+# 使用mutate重命名
 new_data <- scores %>% 
   mutate(姓名 = name, 性别 = gender) %>% 
   select(-name, -gender)
@@ -302,10 +302,11 @@ kable(new_data)
 
 ```
 
-**去重**  
+
+**行去重**  
 
 ```{r}
-scores = scores %>% bind_rows(data.frame(
+scores <-  scores %>% bind_rows(data.frame(
   name = c("lisi"),
   gender = c("M"),
   math = c(87),
@@ -316,6 +317,8 @@ scores = scores %>% bind_rows(data.frame(
 kable(scores)
 
 ```
+
+
 ```{r}
 # 使用distinct()去重
 
@@ -325,6 +328,7 @@ scores %>% distinct()
 
 
 **across()**
+
 方便在summarise() mutate()等函数中对列进行条件过滤。第一个参数时=是要处理的列，第二个参数是处理的方法
 
 ```{r}
@@ -344,7 +348,8 @@ kable(iris %>%
 **filter_all() filter_at()**
 filter_all() 配合all_vars()、any_vals()实现对全部列值的筛选
 filter_all() 配合all_vars()、any_vals()实现先对列进行筛选，对符合筛选条件的列的值及进行判断
-filter() 配合across()实现针对特定列的筛选
+filter() 配合across()实现针对特定列的筛选。
+
 ```{r}
 kable(scores %>% select(contains("mean")) %>% filter_all(all_vars(. > 80)))
 
@@ -354,6 +359,7 @@ kable(scores %>% filter_at(vars(starts_with("en")), all_vars(. > 90)))
 
 kable(scores %>% select(contains("mean")) %>% filter(across(where(is.numeric), ~.x > mean(.x, na.rm = T))))
 ```
+
 
 
 
