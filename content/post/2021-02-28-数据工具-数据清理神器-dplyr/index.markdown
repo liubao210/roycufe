@@ -40,7 +40,7 @@ output:
 
   
   下面为大家一一介绍。
-
+  为了展示方便我引入了knitr包，主要用kable() 方便数据展示。
 
 **安装和加载**  
 运行以下程序加载包，如果没有安装会执行安装程序。
@@ -62,6 +62,7 @@ library(knitr)
 
 
 ```r
+# 一个简单的学生成绩表
 scores <-  data.frame(
   name = c("zhangsan", "lisi", "wangwu"),
   gender = c("F", "M", "F"),
@@ -201,16 +202,266 @@ new_data <- scores %>% select( gender, math, name)
 
 **选择符合条件的行**
 
+
+```r
+# 仅筛选出女生
+new_data <- filter(scores, gender == 'F')
+kable(new_data)
+```
+
+
+
+|name     |gender | math| eng| mean_score|
+|:--------|:------|----:|---:|----------:|
+|wangwu   |F      |   92|  81|       86.5|
+|zhangsan |F      |   90|  77|       83.5|
+
+```r
+# 筛选出女生及英语在80分以上的
+new_data <- filter(scores, gender == 'F', eng > 80)
+kable(new_data)
+```
+
+
+
+|name   |gender | math| eng| mean_score|
+|:------|:------|----:|---:|----------:|
+|wangwu |F      |   92|  81|       86.5|
+
+```r
+## 管道符写法
+new_data <- scores %>% filter(gender == 'F', eng > 90)
+```
+
+
 **汇总计算**
 
+
+```r
+# 计算各科均分
+new_data <- scores %>% 
+  summarise(
+    math_mean = mean(math),
+    eng_mean = mean(eng)
+  ) %>% 
+  ungroup()
+
+kable(new_data)
+```
+
+
+
+| math_mean| eng_mean|
+|---------:|--------:|
+|  89.66667| 83.66667|
+
+
 **分组 group_by**
+记得group_by()之后最好跟上一个ungroup()否则如果直接拿去做别的处理，有可能出现很多意想不到的问题。
+
+
+```r
+# 计算不同性别各科均分
+new_data <- scores %>% 
+  group_by(gender) %>% 
+  summarise(
+    math_mean = mean(math),
+    eng_mean = mean(eng)
+  ) %>% 
+  ungroup()
+```
+
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
+kable(new_data)
+```
+
+
+
+|gender | math_mean| eng_mean|
+|:------|---------:|--------:|
+|F      |        91|       79|
+|M      |        87|       93|
+
+
 
 ## 其他常用方法
 
 **表连接**
 
 
+```r
+# 新建一个表储存学生身高和历史课成绩表，注意这里的学生名字和之前的scores有些差异，是为了对比后面不同的表连接方式
+scores_2 = data.frame(
+  name = c("zhangsan", "lisi", "zhengliu"),
+  height = c(178, 162, 173),
+  history = c(79, 73, 67)
+)
+
+kable(scores_2)
+```
+
+
+
+|name     | height| history|
+|:--------|------:|-------:|
+|zhangsan |    178|      79|
+|lisi     |    162|      73|
+|zhengliu |    173|      67|
+
+
+```r
+# 把两个表合并到一起
+## 左连接
+new_data <- scores %>% 
+  left_join(scores_2, by = "name")
+
+kable(new_data)
+```
+
+
+
+|name     |gender | math| eng| mean_score| height| history|
+|:--------|:------|----:|---:|----------:|------:|-------:|
+|wangwu   |F      |   92|  81|       86.5|     NA|      NA|
+|zhangsan |F      |   90|  77|       83.5|    178|      79|
+|lisi     |M      |   87|  93|       90.0|    162|      73|
+
+```r
+## 内连接
+new_data <- scores %>% 
+  inner_join(scores_2, by = "name")
+
+kable(new_data)
+```
+
+
+
+|name     |gender | math| eng| mean_score| height| history|
+|:--------|:------|----:|---:|----------:|------:|-------:|
+|zhangsan |F      |   90|  77|       83.5|    178|      79|
+|lisi     |M      |   87|  93|       90.0|    162|      73|
+
+```r
+## 全连接
+new_data <- scores %>% 
+  full_join(scores_2, by = "name")
+
+kable(new_data)
+```
+
+
+
+|name     |gender | math| eng| mean_score| height| history|
+|:--------|:------|----:|---:|----------:|------:|-------:|
+|wangwu   |F      |   92|  81|       86.5|     NA|      NA|
+|zhangsan |F      |   90|  77|       83.5|    178|      79|
+|lisi     |M      |   87|  93|       90.0|    162|      73|
+|zhengliu |NA     |   NA|  NA|         NA|    173|      67|
+
+
+
+
+
+
 **列重命名**
+
+
+```r
+# 使用select重命名
+new_data <- scores %>% 
+  select(姓名 = name, 性别 = gender)
+kable(new_data)
+```
+
+
+
+|姓名     |性别 |
+|:--------|:----|
+|wangwu   |F    |
+|zhangsan |F    |
+|lisi     |M    |
+
+```r
+# 使用mutate命名
+new_data <- scores %>% 
+  mutate(姓名 = name, 性别 = gender) %>% 
+  select(-name, -gender)
+kable(new_data)
+```
+
+
+
+| math| eng| mean_score|姓名     |性别 |
+|----:|---:|----------:|:--------|:----|
+|   92|  81|       86.5|wangwu   |F    |
+|   90|  77|       83.5|zhangsan |F    |
+|   87|  93|       90.0|lisi     |M    |
+
+```r
+# 使用rename命名
+name_list = c(
+  "姓名" = "name",
+  "性别" = "gender",
+  "数学" = "math",
+  "英语" = "eng",
+  "平均分" = "mean_score"
+)
+
+new_data <- scores %>% 
+  rename(name_list)
+```
+
+```
+## Note: Using an external vector in selections is ambiguous.
+## i Use `all_of(name_list)` instead of `name_list` to silence this message.
+## i See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+## This message is displayed once per session.
+```
+
+```r
+kable(new_data)
+```
+
+
+
+|姓名     |性别 | 数学| 英语| 平均分|
+|:--------|:----|----:|----:|------:|
+|wangwu   |F    |   92|   81|   86.5|
+|zhangsan |F    |   90|   77|   83.5|
+|lisi     |M    |   87|   93|   90.0|
+
+```r
+# 构建一个常用名字对照，使用rename重命名
+# 区别在于这里的history在scores中并不存在,但是通过筛选去除，不会报错；如果要对另外一个表进行操作可以直接用，也不会报错。好处在于只用维护一个名字对照表
+name_list = c(
+  "姓名" = "name",
+  "性别" = "gender",
+  "身高" = "height",
+  "数学" = "math",
+  "英语" = "eng",
+  "历史" = "history",
+  "平均分" = "mean_score"
+)
+
+new_data <- scores %>% 
+  rename(name_list[name_list %in% colnames(scores)])
+kable(new_data)
+```
+
+
+
+|姓名     |性别 | 数学| 英语| 平均分|
+|:--------|:----|----:|----:|------:|
+|wangwu   |F    |   92|   81|   86.5|
+|zhangsan |F    |   90|   77|   83.5|
+|lisi     |M    |   87|   93|   90.0|
+
+
+
 
 
 #### —————————————————— 
