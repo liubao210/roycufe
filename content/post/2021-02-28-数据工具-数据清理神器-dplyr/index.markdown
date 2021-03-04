@@ -82,7 +82,7 @@ kable(scores)
 
 ## 基本用法
 
-**新建一列 mutate**
+**新建一列 mutate**  
 
 ```r
 # 新建一列英文成绩
@@ -112,13 +112,13 @@ kable(scores)
 |lisi     |M      |   87|  93|       90.0|
 |wangwu   |F      |   92|  81|       86.5|
 
-**管道符**
+**管道符**  
 dplyr提供了非常方便的管道符, 最常用的是 %>% ，它的作用是把管道符前的内容，当作变量传递给后面的方法。这个管道符可以通过快捷键 “Ctrl + Shift + M”输入(赋值符号 <- 可以通过快捷键 “Alt + -”输入)。  
 在上面的例子中，管道符把scores传递给后面的mutate()并当作第一个参数。  
 这种方法在需要进行快速复杂处理的时候非常有用，后面的例子我会尽量使用两种方式展示。
 
 
-**排序 arrange**
+**排序 arrange**  
 通过arrange()实现按照某一列或几列排序，默认升序。可以通过desc()实现降序排列
 
 
@@ -171,7 +171,7 @@ scores <- scores %>% arrange(desc(math))
 ```
 
 
-**选择列 select**
+**选择列 select**  
 可以通过减号，实反向选择。  
 选择的时候列会按照指定顺序重新排序
 
@@ -200,7 +200,7 @@ new_data <- scores %>% select( gender, math, name)
 ```
 
 
-**选择符合条件的行**
+**选择符合条件的行**  
 
 
 ```r
@@ -234,7 +234,7 @@ new_data <- scores %>% filter(gender == 'F', eng > 90)
 ```
 
 
-**汇总计算**
+**汇总计算**  
 
 
 ```r
@@ -256,7 +256,7 @@ kable(new_data)
 |  89.66667| 83.66667|
 
 
-**分组 group_by**
+**分组 group_by**  
 记得group_by()之后最好跟上一个ungroup()否则如果直接拿去做别的处理，有可能出现很多意想不到的问题。
 
 
@@ -363,7 +363,48 @@ kable(new_data)
 |zhengliu |NA     |   NA|  NA|         NA|    173|      67|
 
 
+**纵向拼接**  a
 
+
+```r
+# 一个简单的学生成绩表
+scores_3 <-  data.frame(
+  name = c("zhaoliu"),
+  gender = c("M"),
+  math = c(90),
+  eng = c(87)
+)
+
+kable(scores_3)
+```
+
+
+
+|name    |gender | math| eng|
+|:-------|:------|----:|---:|
+|zhaoliu |M      |   90|  87|
+
+
+
+```r
+# 拼接到scores
+
+new_data <- scores %>% 
+  bind_rows(
+    scores_3
+  )
+
+kable(new_data)
+```
+
+
+
+|name     |gender | math| eng| mean_score|
+|:--------|:------|----:|---:|----------:|
+|wangwu   |F      |   92|  81|       86.5|
+|zhangsan |F      |   90|  77|       83.5|
+|lisi     |M      |   87|  93|       90.0|
+|zhaoliu  |M      |   90|  87|         NA|
 
 
 
