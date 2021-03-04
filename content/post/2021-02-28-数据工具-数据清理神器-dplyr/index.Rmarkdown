@@ -302,7 +302,58 @@ kable(new_data)
 
 ```
 
+**去重**  
 
+```{r}
+scores = scores %>% bind_rows(data.frame(
+  name = c("lisi"),
+  gender = c("M"),
+  math = c(87),
+  eng = c(93),
+  mean_score = c(90.0)
+))
+
+kable(scores)
+
+```
+```{r}
+# 使用distinct()去重
+
+scores %>% distinct()
+
+```
+
+
+**across()**
+方便在summarise() mutate()等函数中对列进行条件过滤。第一个参数时=是要处理的列，第二个参数是处理的方法
+
+```{r}
+# 使用iris数据集
+kable(iris)
+
+# 把是factor类型的列转换成character
+kable(iris %>% mutate(across(where(is.factor), as.character)))
+
+# 求以Sepal开头列的均值
+kable(iris %>%
+  summarise(across(starts_with("Sepal"), ~mean(.x, na.rm = TRUE))))
+
+```
+
+
+**filter_all() filter_at()**
+filter_all() 配合all_vars()、any_vals()实现对全部列值的筛选
+filter_all() 配合all_vars()、any_vals()实现先对列进行筛选，对符合筛选条件的列的值及进行判断
+filter() 配合across()实现针对特定列的筛选
+```{r}
+kable(scores %>% select(contains("mean")) %>% filter_all(all_vars(. > 80)))
+
+kable(scores %>% select(where(is.numeric)) %>%  filter_all(any_vars(. > 80)))
+
+kable(scores %>% filter_at(vars(starts_with("en")), all_vars(. > 90)))
+
+kable(scores %>% select(contains("mean")) %>% filter(across(where(is.numeric), ~.x > mean(.x, na.rm = T))))
+```
 
 
 
