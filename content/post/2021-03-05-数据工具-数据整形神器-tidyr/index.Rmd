@@ -1,0 +1,27 @@
+---
+title: '[数据工具]数据整形神器 - tidyr'
+author: baoliu
+date: '2021-03-05'
+slug: []
+categories:
+  - R
+tags:
+  - tidyverse
+  - tidyr
+---
+
+
+
+**Tidyr**(https://tidyr.tidyverse.org/) 是数据处理经常使用的package,主要用数据形状的改变，处理缺失值等，一般情况作为dplyr的上游处理步骤。  
+
+**主要功能**：  
+- **长宽数据转换** (pivot_longer pivot_wider)  
+- **数据分割与合并** (separate unite)  
+- **缺失数据处理** (drop_na replace_na fill)  
+- **嵌套数据处理** (nest unnest unnest_wider hoist)  
+
+
+```{r }
+
+```
+
