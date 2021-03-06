@@ -1,0 +1,322 @@
+---
+title: '[译]特征工程 - 编码和分箱的深入理解'
+author: baoliu
+date: '2021-03-06'
+slug: []
+categories:
+  - ML
+tags:
+  - ML
+  - model
+---
+
+<script src="index_files/htmlwidgets/htmlwidgets.js"></script>
+<script src="index_files/echarts4r/echarts-en.min.js"></script>
+<script src="index_files/echarts4r/ecStat.min.js"></script>
+<script src="index_files/echarts4r/dataTool.min.js"></script>
+<script src="index_files/echarts4r-binding/echarts4r.js"></script>
+
+
+<div id="简介" class="section level2">
+<h2><strong>简介</strong></h2>
+<p><strong>特征工程是数据科学中模型拟合的重要一步，这篇文章讲述了如何进行从分类变量到连续变量以及从连续变量到分类变量的转换。</strong></p>
+<p><strong>分箱： 把连续变量转换为分类变量</strong><br />
+<strong>编码： 把分类变量转换为连续变量</strong></p>
+</div>
+<div id="分箱" class="section level2">
+<h2><strong>分箱</strong></h2>
+<p>分箱(离散化)是指把连续型变量转换为分类特征的方法。常常能够提升模型表现，也能够帮助识别出离群值。<br />
+分箱的方式可以分为两种：<br />
+- 无监督的分箱： 等距分箱、等频分箱<br />
+- 监督分箱：基于熵的分箱</p>
+<div id="无监督分箱" class="section level3">
+<h3><strong>无监督分箱</strong></h3>
+<p>无监督的分箱无需考虑模型因变量。</p>
+<div id="等距分箱" class="section level4">
+<h4><strong>等距分箱</strong></h4>
+<p>顾名思义，假如有一列数据为学生分数，从0到100不等，按照10为一组就是等距分箱；</p>
+<pre class="r"><code># 
+scores &lt;-  data.frame(
+  score = floor(runif(50, min = 0 , max = 100))
+  )
+
+scores</code></pre>
+<pre><code>##    score
+## 1     42
+## 2     19
+## 3     75
+## 4     43
+## 5     34
+## 6     57
+## 7      3
+## 8     33
+## 9     56
+## 10    34
+## 11    30
+## 12    18
+## 13    90
+## 14    45
+## 15     6
+## 16    67
+## 17    18
+## 18    77
+## 19    20
+## 20    88
+## 21    35
+## 22    58
+## 23    90
+## 24    34
+## 25    76
+## 26    32
+## 27    27
+## 28    61
+## 29    37
+## 30     1
+## 31    92
+## 32    16
+## 33    75
+## 34    53
+## 35    14
+## 36    37
+## 37    51
+## 38    93
+## 39    60
+## 40    69
+## 41    27
+## 42    63
+## 43    99
+## 44    66
+## 45     3
+## 46    72
+## 47    28
+## 48     3
+## 49    40
+## 50    12</code></pre>
+<pre class="r"><code>new_data &lt;- scores %&gt;% 
+  mutate(
+    score_group = paste0(&quot;[&quot;, floor(score / 10), &quot;, &quot;,ceiling(score / 10), &quot;]&quot;)
+  )
+
+kable(new_data)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">score</th>
+<th align="left">score_group</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">42</td>
+<td align="left">[4, 5]</td>
+</tr>
+<tr class="even">
+<td align="right">19</td>
+<td align="left">[1, 2]</td>
+</tr>
+<tr class="odd">
+<td align="right">75</td>
+<td align="left">[7, 8]</td>
+</tr>
+<tr class="even">
+<td align="right">43</td>
+<td align="left">[4, 5]</td>
+</tr>
+<tr class="odd">
+<td align="right">34</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="even">
+<td align="right">57</td>
+<td align="left">[5, 6]</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">[0, 1]</td>
+</tr>
+<tr class="even">
+<td align="right">33</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="odd">
+<td align="right">56</td>
+<td align="left">[5, 6]</td>
+</tr>
+<tr class="even">
+<td align="right">34</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="odd">
+<td align="right">30</td>
+<td align="left">[3, 3]</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="left">[1, 2]</td>
+</tr>
+<tr class="odd">
+<td align="right">90</td>
+<td align="left">[9, 9]</td>
+</tr>
+<tr class="even">
+<td align="right">45</td>
+<td align="left">[4, 5]</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="left">[0, 1]</td>
+</tr>
+<tr class="even">
+<td align="right">67</td>
+<td align="left">[6, 7]</td>
+</tr>
+<tr class="odd">
+<td align="right">18</td>
+<td align="left">[1, 2]</td>
+</tr>
+<tr class="even">
+<td align="right">77</td>
+<td align="left">[7, 8]</td>
+</tr>
+<tr class="odd">
+<td align="right">20</td>
+<td align="left">[2, 2]</td>
+</tr>
+<tr class="even">
+<td align="right">88</td>
+<td align="left">[8, 9]</td>
+</tr>
+<tr class="odd">
+<td align="right">35</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="even">
+<td align="right">58</td>
+<td align="left">[5, 6]</td>
+</tr>
+<tr class="odd">
+<td align="right">90</td>
+<td align="left">[9, 9]</td>
+</tr>
+<tr class="even">
+<td align="right">34</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="odd">
+<td align="right">76</td>
+<td align="left">[7, 8]</td>
+</tr>
+<tr class="even">
+<td align="right">32</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="left">[2, 3]</td>
+</tr>
+<tr class="even">
+<td align="right">61</td>
+<td align="left">[6, 7]</td>
+</tr>
+<tr class="odd">
+<td align="right">37</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="left">[0, 1]</td>
+</tr>
+<tr class="odd">
+<td align="right">92</td>
+<td align="left">[9, 10]</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="left">[1, 2]</td>
+</tr>
+<tr class="odd">
+<td align="right">75</td>
+<td align="left">[7, 8]</td>
+</tr>
+<tr class="even">
+<td align="right">53</td>
+<td align="left">[5, 6]</td>
+</tr>
+<tr class="odd">
+<td align="right">14</td>
+<td align="left">[1, 2]</td>
+</tr>
+<tr class="even">
+<td align="right">37</td>
+<td align="left">[3, 4]</td>
+</tr>
+<tr class="odd">
+<td align="right">51</td>
+<td align="left">[5, 6]</td>
+</tr>
+<tr class="even">
+<td align="right">93</td>
+<td align="left">[9, 10]</td>
+</tr>
+<tr class="odd">
+<td align="right">60</td>
+<td align="left">[6, 6]</td>
+</tr>
+<tr class="even">
+<td align="right">69</td>
+<td align="left">[6, 7]</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="left">[2, 3]</td>
+</tr>
+<tr class="even">
+<td align="right">63</td>
+<td align="left">[6, 7]</td>
+</tr>
+<tr class="odd">
+<td align="right">99</td>
+<td align="left">[9, 10]</td>
+</tr>
+<tr class="even">
+<td align="right">66</td>
+<td align="left">[6, 7]</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">[0, 1]</td>
+</tr>
+<tr class="even">
+<td align="right">72</td>
+<td align="left">[7, 8]</td>
+</tr>
+<tr class="odd">
+<td align="right">28</td>
+<td align="left">[2, 3]</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="left">[0, 1]</td>
+</tr>
+<tr class="odd">
+<td align="right">40</td>
+<td align="left">[4, 4]</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="left">[1, 2]</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>new_data %&gt;% 
+  group_by(score_group) %&gt;% 
+  summarise(freq = n()) %&gt;% 
+  ungroup() %&gt;% 
+  e_charts(score_group) %&gt;% 
+  e_bar(freq)</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<div id="htmlwidget-1" style="width:100%;height:500px;" class="echarts4r html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"theme":"","tl":false,"draw":true,"renderer":"canvas","events":[],"buttons":[],"opts":{"yAxis":[{"show":true}],"xAxis":[{"data":["[0, 1]","[1, 2]","[2, 2]","[2, 3]","[3, 3]","[3, 4]","[4, 4]","[4, 5]","[5, 6]","[6, 6]","[6, 7]","[7, 8]","[8, 9]","[9, 10]","[9, 9]"],"type":"category","boundaryGap":true}],"legend":{"data":["freq"]},"series":[{"data":[{"value":["[0, 1]","5"]},{"value":["[1, 2]","6"]},{"value":["[2, 2]","1"]},{"value":["[2, 3]","3"]},{"value":["[3, 3]","1"]},{"value":["[3, 4]","8"]},{"value":["[4, 4]","1"]},{"value":["[4, 5]","3"]},{"value":["[5, 6]","5"]},{"value":["[6, 6]","1"]},{"value":["[6, 7]","5"]},{"value":["[7, 8]","5"]},{"value":["[8, 9]","1"]},{"value":["[9, 10]","3"]},{"value":["[9, 9]","2"]}],"name":"freq","type":"bar","yAxisIndex":0,"xAxisIndex":0,"coordinateSystem":"cartesian2d"}]},"dispose":true},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</div>

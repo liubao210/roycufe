@@ -1,0 +1,88 @@
+---
+title: '[译]特征工程 - 编码和分箱的深入理解'
+author: baoliu
+date: '2021-03-06'
+slug: []
+categories:
+  - ML
+tags:
+  - ML
+  - model
+---
+
+```{r library, include=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(knitr)
+library(echarts4r)
+```
+
+## **简介**
+
+**特征工程是数据科学中模型拟合的重要一步，这篇文章讲述了如何进行从分类变量到连续变量以及从连续变量到分类变量的转换。**  
+
+**分箱： 把连续变量转换为分类变量**    
+**编码： 把分类变量转换为连续变量**  
+
+
+## **分箱**  
+
+分箱(离散化)是指把连续型变量转换为分类特征的方法。常常能够提升模型表现，也能够帮助识别出离群值。  
+分箱的方式可以分为两种：  
+  - 无监督的分箱： 等距分箱、等频分箱  
+  - 监督分箱：基于熵的分箱  
+  
+
+### **无监督分箱**  
+
+无监督的分箱无需考虑模型因变量。  
+
+#### **等距分箱**  
+
+顾名思义，假如有一列数据为学生分数，从0到100不等，按照10为一组就是等距分箱；
+
+
+```{r unsupervised_binning}
+# 
+scores <-  data.frame(
+  score = floor(runif(50, min = 0 , max = 100))
+  )
+
+scores
+```
+
+```{r}
+new_data <- scores %>% 
+  mutate(
+    score_group = paste0("[", floor(score / 10), ", ",ceiling(score / 10), "]")
+  )
+
+kable(new_data)
+
+new_data %>% 
+  group_by(score_group) %>% 
+  summarise(freq = n()) %>% 
+  ungroup() %>% 
+  e_charts(score_group) %>% 
+  e_bar(freq)
+  
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
