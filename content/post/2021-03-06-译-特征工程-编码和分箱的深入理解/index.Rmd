@@ -8,11 +8,24 @@ categories:
 tags:
   - ML
   - model
+df_print: paged
+output: 
+  df_print: paged
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+      
+    df_print: paged
+    theme: cerulean
 ---
 
 ```{r library, include=FALSE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(knitr)
+library(DT)
 library(echarts4r)
 ```
 
@@ -38,42 +51,96 @@ library(echarts4r)
 
 #### **等距分箱**  
 
-顾名思义，假如有一列数据为学生分数，从0到100不等，按照10为一组就是等距分箱；
+顾名思义，假如有一列数据为价格，按照10为一组就是等距分箱；  
 
 
 ```{r unsupervised_binning}
 # 
-scores <-  data.frame(
-  score = floor(runif(50, min = 0 , max = 100))
-  )
+price <-  data.frame(
+  price = floor(abs(rnorm(50, mean = 70 , sd = 20)))
+  ) %>% 
+  arrange(price)
 
-scores
+price$price 
 ```
 
+
+
 ```{r}
-new_data <- scores %>% 
+new_data <- price %>% 
   mutate(
-    score_group = paste0("[", floor(score / 10), ", ",ceiling(score / 10), "]")
+    price_group = paste0("[", floor(price / 10), ", ",ceiling(price / 10), "]"),
+    group_index = floor(price / 10)
   )
 
-kable(new_data)
+datatable(new_data)
 
 new_data %>% 
-  group_by(score_group) %>% 
+  group_by(price_group, group_index) %>% 
   summarise(freq = n()) %>% 
   ungroup() %>% 
-  e_charts(score_group) %>% 
-  e_bar(freq)
+  arrange(group_index) %>% 
+  e_charts(price_group) %>% 
+  e_bar(freq) %>% 
+  e_grid(left = '7%', right = '2%') %>% 
+  e_x_axis(axisLabel = list(interval = 0, rotate = 315))
   
 ```
 
 
 
+#### **等频分箱**  
+
+顾名思义，假如有一列数据为价格，把它分成等量的几组就是等距分箱；
+
+```{r}
+# x指要分成的组数
+x <- 10
+cat("一共要分成", x, "组", "每组", dim(price)[1] / 10, "个")
+price_group_index <- c(rep(1:10, each = dim(price)[1] / 10))
+
+new_data <- price %>% 
+  mutate(
+    group_index = price_group_index
+  ) %>% 
+  group_by(group_index) %>% 
+  mutate(price_group = paste0("[", min(price), ", ", max(price), "]"))
+  
+
+datatable(new_data)
+
+
+new_data %>% 
+  group_by(price_group, group_index) %>% 
+  summarise(freq = n()) %>% 
+  ungroup() %>% 
+  arrange(group_index) %>% 
+  e_charts(price_group) %>% 
+  e_bar(freq) %>% 
+  e_grid(left = '7%', right = '2%') %>% 
+  e_x_axis(axisLabel = list(interval = 0, rotate = 315))
+
+```
 
 
 
+### 监督分箱
+
+监督分箱是指在分箱的时候考虑目标分类结果，即根据已有目标分类结果来衡量怎么对一个连续型自变量分箱最好。
+
+#### 基于熵的分箱
+
+在分箱的时候，计算目标类别的熵，并根据最大信息增益进行分箱。
+简单的理解为，假设有一列商品价格，有一列是是否畅销商品，那么如果要把商品价格转换成分类变量，在转换的时候可以考虑怎么分箱可以使得分箱的结果最接近于是否畅销商品这一已有结果(使分箱结果与已有结果相吻合)。
 
 
+
+## 编码
+
+
+### 标签编码
+
+### 
 
 
 
