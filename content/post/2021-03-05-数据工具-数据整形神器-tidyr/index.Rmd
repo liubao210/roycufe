@@ -11,17 +11,313 @@ tags:
 ---
 
 
+# **tidyr**
 
 **Tidyr**(https://tidyr.tidyverse.org/) 是数据处理经常使用的package,主要用数据形状的改变，处理缺失值等，一般情况作为dplyr的上游处理步骤。  
 
 **主要功能**：  
 - **长宽数据转换** (pivot_longer pivot_wider)  
 - **数据分割与合并** (separate unite)  
-- **缺失数据处理** (drop_na replace_na fill)  
+- **缺失数据处理** (drop_na  fill)  
 - **嵌套数据处理** (nest unnest unnest_wider hoist)  
 
 
-```{r }
+## 长宽数据转换
+
+```{r warning=FALSE, message=FALSE}
+library(dplyr)
+library(tibble)
+library(tidyr)
+
+mtcars = mtcars %>% rownames_to_column('name')
+DT::datatable(mtcars)
+```
+
+
+### 宽变长 pivot_longer
+
+这里相当于是把数据变窄变长了
+
+```{r}
+long_data = mtcars %>% 
+  pivot_longer(
+    -name,
+    names_to = 'feature',
+    values_to = 'value'
+  )
+
+DT::datatable(long_data)
+```
+
+可以看到原来的属性名mpg、cyl等都被合并到了feature列，对应的值都被合并到了value列。而且信息是一样的，没有损失。  
+所以pivot_longer可以理解为把数据变长，那变长会吧原来的列整合成新的列，所以需要指定新的列名和值的列名。  
+
+
+### 长变宽 pivot_wider
+
+进行与上相反的操作，把刚才变长的数据恢复原来的样子。
+
+```{r}
+origin_data = long_data %>% 
+  pivot_wider(
+    names_from = feature,
+    values_from = value
+  )
+
+DT::datatable(origin_data)
+```
+
+这里变宽可以理解为把一列拆分成多列，因此需要传入参数新列名称的来源，新列值的来源。  
+细心的同学应该还会看到，pivot_wider里传递变量的名字和pivot_longer不同，后者变量名加了引号，可以简单记忆成如果该列在原有数据中已经存在就不需引号，否则加引号。
+
+
+### 更多长宽转换例子
+
+```{r}
+scores = data.frame(
+  school = c("A", "B", "A" ,"B" ,"A", "B"),
+  grade = c("grade_1","grade_2","grade_2","grade_2","grade_1","grade_1"),
+  gender = c("F", "F", "M", "M", "M", "F"),
+  eng = c(90, 98, 78, 73, 82, 94),
+  math = c(99, 100, 87, 89, 93, 99),
+  physical = c(76, 78, 82, 83, 68, 74)
+)
+
+scores
 
 ```
+
+把学生成绩合并成一列
+
+```{r}
+long_data =  scores %>% 
+    pivot_longer(
+      -c(school, grade, gender),
+      names_to = "subject",
+      values_to = "score"
+    )
+
+DT::datatable(long_data)
+
+# 或者通过使用下面的方式实现同样的效果，和上面的区别在于前者是指定保留哪些列，这里是指定保留哪些列
+# 指定的保持不变的列不会改变，只会在原有基础上进行(xing)行(hang)的复制扩充
+# scores %>% 
+#     pivot_longer(
+#       c(eng, math, physical),
+#       names_to = "subject",
+#       values_to = "score"
+#     )
+
+```
+
+把学校信息拆分成两列
+
+```{r}
+
+DT::datatable(
+  
+  long_data %>% 
+  pivot_wider(
+    names_from = school,
+    values_from = score
+  )
+  
+)
+
+  
+```
+
+
+把年级信息拆分成两列
+
+```{r}
+
+DT::datatable(
+  
+  long_data %>% 
+  pivot_wider(
+    names_from = grade,
+    values_from = score
+  )
+  
+)
+
+  
+```
+
+把学校和年级信息拆分成两列
+
+```{r}
+
+DT::datatable(
+  
+  long_data %>% 
+  pivot_wider(
+    names_from = c(school, grade),
+    values_from = score
+  )
+  
+)
+
+  
+```
+
+
+把学校和年级信息拆分成两列，使用names_glue参数自定义列名规则
+
+```{r}
+
+DT::datatable(
+  
+  long_data %>% 
+  pivot_wider(
+    names_from = c(school, grade),
+    values_from = score,
+    names_glue = "{grade}@{school}"
+  )
+  
+)
+
+  
+```
+
+
+
+
+## 数据分割与合并
+
+
+### 数据分割
+
+把原来的grade分割成两列， 新的grade只保留数字
+
+```{r}
+DT::datatable(
+  
+  scores %>% 
+  separate(grade, into = c("trash", "grade"))
+  
+)
+
+
+```
+
+### 数据合并
+
+```{r}
+new_data = scores %>% 
+    unite("score", eng, math, physical) %>% 
+    mutate(subject = "eng_math_physical")
+
+DT::datatable(
+  new_data
+)
+
+
+
+```
+
+### 数据分割 
+
+针对上面的数据，如果不知道score是几个科目的拼接时，由于separate需要指定分割之后的名称，这里就会很麻烦。尤其是当有的学生有4科成绩，有的是3科时更麻烦，不过separate_rows()能够解决这个问题。  
+这个函数能够把两列按照同样规则拼接起来的数据分割成多行。
+仔细观察这个数据和上面数据的对应关系。
+
+```{r}
+
+DT::datatable(
+  
+  new_data %>% 
+  separate_rows(subject, score)
+  
+)
+
+```
+
+
+## 缺失数据处理
+
+```{r}
+new_data =   long_data %>% 
+  pivot_wider(
+    names_from = grade,
+    values_from = score
+  )
+
+DT::datatable(
+  new_data
+)
+
+
+```
+
+可以看到这里有些数据是缺失的
+
+
+### 删除缺失的行
+
+默认只要一行出现缺失值就删除
+
+```{r}
+DT::datatable(
+  new_data %>% 
+  drop_na()
+)
+
+
+```
+
+指定按照某些列是否缺失进行删除
+
+```{r}
+
+DT::datatable(
+  new_data %>% 
+  drop_na(grade_1)
+)
+
+
+```
+
+
+### 填充缺失值
+使用fill填充缺失值，可以规定填充的方向。
+“down”代表使用上面的填充，“up”代表使用下面的填充  
+
+```{r}
+DT::datatable(
+new_data %>% 
+  fill(grade_1, .direction = "down")
+)
+
+
+```
+
+
+### 替换缺失值
+
+分别使用各自平均分替换缺失值
+
+```{r}
+mean_grade_1 = mean(new_data$grade_1, na.rm = T)
+mean_grade_2 = mean(new_data$grade_2, na.rm = T)
+
+
+DT::datatable(
+  
+  new_data %>% 
+  replace_na(list(
+    grade_1 = mean_grade_1, 
+    grade_2 = mean_grade_2
+  ))
+  
+)
+
+```
+
+
+
+
+
+
 
