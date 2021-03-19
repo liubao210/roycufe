@@ -1,13 +1,25 @@
 ---
 title: '[数据工具]数据整形神器 - tidyr'
 author: baoliu
-date: '2021-03-05'
+date: '2021-03-19'
 slug: []
 categories:
   - R
 tags:
   - tidyverse
   - tidyr
+df_print: paged
+output: 
+  df_print: paged
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+      
+    df_print: paged
+    theme: cerulean
 ---
 
 
@@ -28,10 +40,17 @@ tags:
 library(dplyr)
 library(tibble)
 library(tidyr)
+library(knitr)
 
 mtcars = mtcars %>% rownames_to_column('name')
-DT::datatable(mtcars)
+
+print_df = function(df){
+  kable(df)
+}
+
+print_df(head(mtcars))
 ```
+
 
 
 ### 宽变长 pivot_longer
@@ -46,7 +65,7 @@ long_data = mtcars %>%
     values_to = 'value'
   )
 
-DT::datatable(long_data)
+print_df(head(long_data))
 ```
 
 可以看到原来的属性名mpg、cyl等都被合并到了feature列，对应的值都被合并到了value列。而且信息是一样的，没有损失。  
@@ -64,7 +83,7 @@ origin_data = long_data %>%
     values_from = value
   )
 
-DT::datatable(origin_data)
+print_df(head(origin_data))
 ```
 
 这里变宽可以理解为把一列拆分成多列，因此需要传入参数新列名称的来源，新列值的来源。  
@@ -83,7 +102,7 @@ scores = data.frame(
   physical = c(76, 78, 82, 83, 68, 74)
 )
 
-scores
+print_df(scores)
 
 ```
 
@@ -97,7 +116,7 @@ long_data =  scores %>%
       values_to = "score"
     )
 
-DT::datatable(long_data)
+print_df(long_data)
 
 # 或者通过使用下面的方式实现同样的效果，和上面的区别在于前者是指定保留哪些列，这里是指定保留哪些列
 # 指定的保持不变的列不会改变，只会在原有基础上进行(xing)行(hang)的复制扩充
@@ -114,7 +133,7 @@ DT::datatable(long_data)
 
 ```{r}
 
-DT::datatable(
+print_df(
   
   long_data %>% 
   pivot_wider(
@@ -132,7 +151,7 @@ DT::datatable(
 
 ```{r}
 
-DT::datatable(
+print_df(
   
   long_data %>% 
   pivot_wider(
@@ -149,7 +168,7 @@ DT::datatable(
 
 ```{r}
 
-DT::datatable(
+print_df(
   
   long_data %>% 
   pivot_wider(
@@ -167,7 +186,7 @@ DT::datatable(
 
 ```{r}
 
-DT::datatable(
+print_df(
   
   long_data %>% 
   pivot_wider(
@@ -192,7 +211,7 @@ DT::datatable(
 把原来的grade分割成两列， 新的grade只保留数字
 
 ```{r}
-DT::datatable(
+print_df(
   
   scores %>% 
   separate(grade, into = c("trash", "grade"))
@@ -209,7 +228,7 @@ new_data = scores %>%
     unite("score", eng, math, physical) %>% 
     mutate(subject = "eng_math_physical")
 
-DT::datatable(
+print_df(
   new_data
 )
 
@@ -225,7 +244,7 @@ DT::datatable(
 
 ```{r}
 
-DT::datatable(
+print_df(
   
   new_data %>% 
   separate_rows(subject, score)
@@ -244,7 +263,7 @@ new_data =   long_data %>%
     values_from = score
   )
 
-DT::datatable(
+print_df(
   new_data
 )
 
@@ -259,7 +278,7 @@ DT::datatable(
 默认只要一行出现缺失值就删除
 
 ```{r}
-DT::datatable(
+print_df(
   new_data %>% 
   drop_na()
 )
@@ -271,7 +290,7 @@ DT::datatable(
 
 ```{r}
 
-DT::datatable(
+print_df(
   new_data %>% 
   drop_na(grade_1)
 )
@@ -285,7 +304,7 @@ DT::datatable(
 “down”代表使用上面的填充，“up”代表使用下面的填充  
 
 ```{r}
-DT::datatable(
+print_df(
 new_data %>% 
   fill(grade_1, .direction = "down")
 )
@@ -303,7 +322,7 @@ mean_grade_1 = mean(new_data$grade_1, na.rm = T)
 mean_grade_2 = mean(new_data$grade_2, na.rm = T)
 
 
-DT::datatable(
+print_df(
   
   new_data %>% 
   replace_na(list(
@@ -314,10 +333,5 @@ DT::datatable(
 )
 
 ```
-
-
-
-
-
 
 
