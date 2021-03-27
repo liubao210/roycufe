@@ -22,6 +22,7 @@ library(knitr)
 # **purrr**
 
 函数式编程能够提高代码的复用率, 通过把重复、通用的代码封装成函数，提高了可读性。  
+purrr能够帮助用户实现快速循环遍历并执行函数，和baseR中apply家族类似。  
 
 
 ```r
@@ -40,7 +41,7 @@ get_hello("roy", 17)
 ## hello xiaoxianrou  roy
 ```
 
-purrr能够帮助用户实现快速循环遍历并执行函数，和baseR中apply家族类似。  
+
 
 
 ```r
@@ -57,9 +58,54 @@ walk2(name, age, get_hello)
 ## hello shehuiren  zhaoliu
 ```
 
+一个简单但毫无实用价值的例子:  
+map函数把x_里的每一个元素，当作参数传递给get_square，并将返回的结果合并成一个list
+map函数把x_里的每一个元素，当作参数传递给get_square，并将返回的结果合并成一个向量
+
+
+```r
+get_square <- function(x){
+  x^2
+}
+
+x_ <- c(1, 2, 3, 4, 5, 6)
+
+x_ %>% map(get_square)
+```
+
+```
+## [[1]]
+## [1] 1
+## 
+## [[2]]
+## [1] 4
+## 
+## [[3]]
+## [1] 9
+## 
+## [[4]]
+## [1] 16
+## 
+## [[5]]
+## [1] 25
+## 
+## [[6]]
+## [1] 36
+```
+
+```r
+x_ %>% map_dbl(get_square)
+```
+
+```
+## [1]  1  4  9 16 25 36
+```
+
+
 ## map
 
 ### map_dfr
+map_dfr把每一个产生的data.frame按照行合并，合并成一个dataframe.  
 
 下面的数据计算了用户行为及其发生的日期，我写了一个函数通过传入某单个用户的行为数据，返回出该用户最长连续产生行为的天数。
 
@@ -149,5 +195,65 @@ sample_data_complete_split %>%
 
 
 ## walk
+walk适用于没有返回值的函数，比如函数的作用是修改某个固定的变量。  
+
+
+```r
+x <- 0
+
+add_score = function(a){
+  x <<- x + a
+}
+
+x_ <- c(1, 2, 3, 4, 5, 6)
+
+x_ %>% walk(add_score)
+
+x
+```
+
+```
+## [1] 21
+```
+
+一个实用的案例是我自己的plumber接口，在挂载各个分开编写的文件到root的时候，使用walk遍历文件夹下的所有接口文件，并将其挂载到root对象上。  
+
+
+```r
+mount_fn = function(children, dev_or_not = F){
+  file.name = children
+  path.name = paste0("/", gsub("\\.[rR]$", "", file.name))
+  
+  tryCatch({
+    if(gsub("\\.[rR]$", "", file.name) %in% ignore_list){
+      cat("Ignore apis file:", file.name, "\n")
+    }else{
+      if(dev_or_not){
+        api.functions = pr(file.path("main/apis_dev", file.name))
+      }else{
+        api.functions = pr(file.path("main/apis", file.name))
+      }
+      root %>% pr_mount(path.name, api.functions)
+      cat("Add apis file:", file.name, " successfully ", "\npath: ", path.name, "\n")
+    }
+    
+  },
+  error = function(e){
+    print(e)
+    cat("\nAdd apis file:", file.name, " error\n")
+  })
+}
+
+## mount all====
+root = pr()
+ignore_list = c()
+
+file.list = list.files("main/apis/")
+
+file.list %>% 
+  walk(mount_fn, dev_or_not = F)
+```
+
+
 
 
