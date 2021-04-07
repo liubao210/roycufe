@@ -1,0 +1,779 @@
+---
+title: '[数据工具]数据可视化-echarts4r'
+author: roy
+date: '2021-04-07'
+slug: []
+categories:
+  - R
+tags:
+  - viz
+---
+
+
+
+```{r warning=FALSE, message=F}
+library(tidyverse)
+library(tibble)
+library(echarts4r)
+library(echarts4r.maps)
+```
+
+
+**echarts4r与ggplot2不同在于ggplot2在原图上新增一个线或图的时候，整图都会刷新，echarts4r只会在原有基础上修改**
+
+**基本用法就是e_charts()里指定x轴。在其他的函数里指定y轴, 有时这里可以指定第三个参数是z轴或作为点的大小;**
+
+**支持timeline**
+
+**支持shiny; 支持callback函数**
+
+## first plot
+
+
+### 使用各个参数
+
+```{r firstplot}
+df <- state.x77 %>% 
+  as.data.frame() %>% 
+  tibble::rownames_to_column("State")
+
+df %>% 
+  e_charts(State) %>% # initialise and set x
+  e_line(Population, smooth = T) %>%  # add a line
+  e_area(Income ,smooth = TRUE, y_index = 1) %>%  # add area y_index = 1添加y轴, 形成双轴
+  e_axis_labels(x = "State") %>% # axis labels
+  e_title("US States", "Population & Income", "biteam.dmall.com") %>%  # Add title & subtitle
+  # e_theme("infographic") %>%  # theme
+  e_legend(right = 0, show = T) %>%  # move legend to the bottom
+  e_tooltip(trigger = "axis") # tooltip 悬浮提示
+
+```
+
+
+## advanced
+
+### Grouping
+
+```{r}
+# no timeline
+iris %>% 
+  group_by(Species) %>% 
+  e_charts(Sepal.Length) %>% 
+  e_line(Sepal.Width) %>% 
+  e_title("Grouped data")
+
+# use timeline
+iris %>% 
+  group_by(Species) %>% 
+  e_charts(Sepal.Length, timeline = TRUE) %>% 
+  e_line(Sepal.Width) %>% 
+  e_title("Timeline")
+
+
+```
+
+## stacked 堆叠 
+### 通过指定stack名称进行堆叠，相同名称的按顺序堆在一起
+
+```{r}
+df <- data.frame(
+  x = LETTERS[1:10],
+  a = runif(10),
+  b = runif(10),
+  c = runif(10),
+  d = runif(10)
+)
+
+# stack名称相同的会按顺序堆叠起来, 不同的名称新增柱子不会堆叠
+df %>% 
+  e_charts(x) %>% 
+  e_bar(a, stack = "grp") %>% 
+  e_bar(b, stack = "grp") %>% 
+  e_bar(c, stack = "grp2") %>% 
+  e_bar(d, stack = "grp2") %>% 
+  e_tooltip(trigger = 'axis')
+```
+
+
+## Scatter
+
+
+#### 通过symbol_size规定点的大小
+
+```{r}
+iris %>% 
+    group_by(Species) %>% 
+    e_charts(Sepal.Length) %>% 
+    e_scatter(Petal.Length, symbol_size = 15)
+```
+
+
+```{r}
+iris %>% 
+    group_by(Species) %>% 
+    e_charts(Sepal.Length) %>% 
+    e_scatter(Petal.Length, Sepal.Width) %>% # 第一个参数是y轴, 第二个是点的大小
+    e_tooltip(trigger = 'axis')
+
+```
+
+
+### effect scatter
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  e_charts(Sepal.Length) %>% 
+  e_effect_scatter(Petal.Length, Sepal.Width)
+```
+
+
+
+
+
+
+### 缩放
+
+
+```{r}
+my_scale <- function(x){
+  scales::rescale(x, to = c(5, 30))
+}
+
+a = c(1, 2, 3.1, 4, 60)
+my_scale(a)
+
+
+iris %>% 
+    group_by(Species) %>% 
+    e_charts(Sepal.Length) %>% 
+    e_scatter(Petal.Length, Sepal.Width, scale = my_scale) %>% # 第一个参数是y轴, 第二个是点的大小
+    e_tooltip(trigger = 'axis')
+```
+
+### e_visual_map增加比例尺
+
+```{r}
+echart <- mtcars %>% 
+  e_charts(mpg) %>% 
+  e_scatter(qsec, wt, scale = e_scale) %>% 
+  e_legend(show = FALSE)
+
+
+echart %>% 
+  e_visual_map(wt, scale = e_scale)
+```
+
+
+## 热力图
+
+```{r}
+v <- LETTERS[1:10]
+matrix <- data.frame(
+  x = sample(v, 300, replace = TRUE), 
+  y = sample(v, 300, replace = TRUE), 
+  z = rnorm(300, 10, 1),
+  stringsAsFactors = FALSE
+) %>% 
+  dplyr::group_by(x, y) %>% 
+  dplyr::summarise(z = sum(z)) %>% 
+  dplyr::ungroup()
+#> `summarise()` regrouping output by 'x' (override with `.groups` argument)
+
+matrix %>% 
+  e_charts(x) %>% 
+  e_heatmap(y, z) %>% 
+  e_visual_map(z)
+```
+
+### 日历
+
+```{r}
+dates <- seq.Date(as.Date("2017-01-01"), as.Date("2018-12-31"), by = "day")
+values <- rnorm(length(dates), 20, 6)
+
+year <- data.frame(date = dates, values = values)
+
+# year
+
+year %>% 
+  e_charts(date) %>% 
+  e_calendar(range = "2018") %>% 
+  e_heatmap(values, coord_system = "calendar") %>% 
+  e_visual_map(max = 30) %>% 
+  e_tooltip(trigger = 'axis')
+```
+
+### 多个日历
+
+```{r}
+year %>% 
+  dplyr::mutate(year = format(date, "%Y")) %>% # get year from date
+  group_by(year) %>% 
+  e_charts(date) %>% 
+  e_calendar(range = "2017", top="40") %>% 
+  e_calendar(range = "2018", top="260") %>% 
+  e_heatmap(values, coord_system = "calendar") %>% 
+  e_visual_map(max = 30) %>% 
+  e_title("Calendar", "Heatmap")%>%
+  e_tooltip("item") 
+```
+
+## Gauge
+
+```{r}
+e_charts() %>% 
+  e_gauge(41, "PERCENT") %>% 
+  # e_gauge(91, "PERCENT") %>% 
+  e_title("Gauge")
+```
+
+## Liquifill
+
+```{r}
+liquid <- data.frame(val = c(0.6, 0.5, 0.4))
+
+liquid %>% 
+  e_charts() %>% 
+  e_liquid(val) 
+```
+
+
+## polar
+
+```{r}
+df <- data.frame(x = 1:10, y = seq(1, 20, by = 2))
+
+df %>% 
+  e_charts(x) %>% 
+  e_line(y) 
+
+
+df %>% 
+  e_charts(x) %>% 
+  e_polar() %>% 
+  e_angle_axis() %>% 
+  e_radius_axis() %>% 
+  e_line(y, coord_system = "polar", smooth = TRUE) 
+
+df %>% 
+  e_charts(x) %>% 
+  e_polar() %>% 
+  e_angle_axis() %>% 
+  e_radius_axis() %>% 
+  e_bar(y, coord_system = "polar", smooth = TRUE) 
+
+
+```
+
+
+### Radial
+
+```{r}
+df %>% 
+  head(10) %>% 
+  e_charts(x) %>% 
+  e_polar() %>% 
+  e_angle_axis() %>% 
+  e_radius_axis(x) %>% 
+  e_bar(y, coord_system = "polar") %>% 
+  e_scatter(y, coord_system = "polar") # 替换成别的变量会好一些，这里仅作示例
+```
+
+
+
+
+## flip_coords
+
+```{r}
+data.frame(
+  x = LETTERS[1:5],
+  y = runif(5, 1, 15)
+) %>% 
+  e_charts(x) %>% 
+  e_bar(y, name = "flipped") %>% 
+  e_flip_coords() # flip axis
+```
+
+## pie
+
+```{r}
+mtcars %>% 
+  head() %>% 
+  dplyr::mutate(model = row.names(.)) %>% 
+  e_charts(model) %>% 
+  e_pie(carb) %>% 
+  e_title("Pie chart")
+```
+
+### dount
+
+```{r}
+mtcars %>% 
+  head() %>% 
+  dplyr::mutate(model = row.names(.)) %>% 
+  e_charts(model) %>% 
+  e_pie(carb, radius = c("50%", "70%")) %>% 
+  e_title("Donut chart")
+```
+
+## Rosetype
+
+```{r}
+mtcars %>% 
+  head() %>% 
+  dplyr::mutate(model = row.names(.)) %>% 
+  e_charts(model) %>% 
+  e_pie(carb, roseType = "radius")
+```
+
+
+## sunburst
+
+```{r}
+df <- tibble(
+  name = c("earth", "mars", "venus"), 
+  value = c(30, 40, 30),        # 1st level
+  itemStyle = tibble(color = c(NA, 'red', 'blue')),
+  children = list(
+    # earth的children
+    tibble(name = c("land", "ocean"), 
+           value = c(10,20),             # 2nd level
+           children = list(
+             tibble(name = c("forest", "river"), 
+                    value = c(3,7)),   # 3rd level 
+             tibble(name = c("fish", "kelp"), 
+                    value = c(10,5),
+                    children = list(
+                      tibble(name = c("shark", "tuna"), 
+                             value = c(2,6)),  # 4th level 
+                      NULL  # kelp
+                    ))
+           )),
+    # mars的children
+    tibble(name = c("crater", "valley"), value = c(20,20)),
+    # venus的children
+    NULL  # venus
+  )
+)
+
+df
+
+df %>% 
+  e_charts() %>% 
+  e_sunburst() %>% 
+  e_title("Sunburst")
+```
+
+
+## tree
+
+```{r}
+df <- tibble(
+  name = "earth",        # 1st level
+  children = list(
+    tibble(name = c("land", "ocean"),             # 2nd level
+       children = list(
+         tibble(name = c("forest", "river")),   # 3rd level 
+         tibble(name = c("fish", "kelp"),
+            children = list(
+               tibble(name = c("shark", "tuna"),  # 4th level 
+               NULL  # kelp
+            ))
+         )
+       ))
+  )
+)
+
+df
+
+df %>% 
+  e_charts() %>% 
+  e_tree()
+
+
+df %>% 
+  e_charts() %>% 
+  e_tree(layout = "radial")
+```
+
+
+## Treemap
+
+```{r}
+# 使用上面一样的数据
+df %>% 
+  e_charts() %>% 
+  e_treemap() %>% 
+  e_title("Treemap chart")
+```
+
+
+## River
+
+```{r}
+dates <- seq.Date(Sys.Date() - 30, Sys.Date(), by = "day")
+
+river <- data.frame(
+  dates = dates,
+  apples = runif(length(dates)),
+  bananas = runif(length(dates)),
+  pears = runif(length(dates))
+)
+
+river %>% 
+  e_charts(dates) %>% 
+  e_river(apples) %>% 
+  e_river(bananas) %>% 
+  e_river(pears) %>% 
+  e_tooltip(trigger = "axis") %>% 
+  e_title("River charts", "(Streamgraphs)") %>% 
+  e_datazoom()
+```
+
+
+## 添加标志线、标志点;添加双x、双y坐标轴
+
+```{r}
+USArrests %>% 
+  dplyr::mutate(
+    State = row.names(.),
+    Rape = -Rape
+  ) %>% 
+  e_charts(State) %>% 
+  e_area(Murder) %>%
+  # e_bar(Rape, name = "Sick basterd") %>% # second x axis 
+  e_bar(Rape, name = "Sick basterd", x_index = 1) %>% # second y axis 
+  e_mark_line("Sick basterd", data = list(type = "average")) %>% 
+  e_mark_point("Murder", data = list(type = "min"))
+```
+
+
+
+
+## show labels
+
+```{r}
+# 方式1
+USArrests %>% 
+    dplyr::mutate(
+        State = row.names(.)
+    ) %>% 
+    dplyr::slice(1:10) %>% 
+    e_charts(State) %>% 
+    e_area(Murder, label = list(normal = list(show = TRUE))) 
+
+
+# 方式2
+USArrests %>% 
+  dplyr::mutate(
+      State = row.names(.)
+  ) %>% 
+  dplyr::slice(1:10) %>% 
+  e_charts(State) %>% 
+  e_area(Murder) %>% 
+  e_labels()
+```
+
+
+## nested data
+
+### 这里还通过e_add实现根据条件是否展示坐标
+
+```{r}
+# add columns to iris
+iris_dat <- iris %>% 
+  dplyr::mutate(
+    show = TRUE, # to show the labels
+    fontSize = exp(Sepal.Length) / 10, # font size will correspond to Sepal.Length
+    color = sample(c("red", "black", "blue"), dplyr::n(), replace = TRUE) # assign a random color to the label
+  )
+
+head(iris_dat)
+
+iris_dat %>% 
+  dplyr::slice(1:10) %>% # simplify the graph. 
+  e_charts(Sepal.Width) %>% 
+  e_line(Sepal.Length) %>% 
+  e_add("label", show, fontSize, color) %>% # add our columns to "label"
+  e_x_axis(min = 2.5)
+```
+
+## 漏斗
+
+```{r}
+funnel <- data.frame(
+  stage = c("View", "Click", "Purchase"), 
+  value = c(80, 30, 20),
+  color = c("blue", "red", "green")
+)
+
+funnel %>% 
+  e_charts() %>% 
+  e_funnel(value, stage) %>% 
+  e_add("itemStyle", color)
+
+funnel %>% 
+  e_charts() %>% 
+  e_funnel(value, stage)
+```
+
+## Rader
+
+```{r}
+df <- data.frame(
+  x = LETTERS[1:5],
+  y = runif(5, 1, 5),
+  z = runif(5, 3, 7)
+)
+
+df %>% 
+  e_charts(x) %>% 
+  e_radar(y, max = 7, name = "radar") %>%
+  e_radar(z, max = 7, name = "chart") %>%
+  e_tooltip(trigger = "item")
+```
+
+
+## Wordcloud
+
+```{r}
+words <- function(n = 5000) {
+  a <- do.call(paste0, replicate(5, sample(LETTERS, n, TRUE), FALSE))
+  paste0(a, sprintf("%04d", sample(9999, n, TRUE)), sample(LETTERS, n, TRUE))
+}
+
+tf <- data.frame(terms = words(100), 
+  freq = rnorm(100, 55, 10)) %>% 
+  dplyr::arrange(-freq)
+
+tf %>% 
+  e_color_range(freq, color) %>% 
+  e_charts() %>% 
+  e_cloud(terms, freq, color, shape = "circle", sizeRange = c(3, 15)) %>% 
+  e_title("Wordcloud", "Random strings")
+```
+
+
+
+## Candlestick
+
+```{r}
+library(quantmod)
+
+# getSymbols("GS") #Goldman Sachs
+# GS <- as.data.frame(GS)
+# GS$date <- row.names(GS)
+# 
+# 
+# GS %>% 
+#   e_charts(date) %>% 
+#   e_candle(GS.Open, GS.Close, GS.Low, GS.High, name = "Goldman Sachs") %>% 
+#   e_datazoom(type = "slider") %>% 
+#   e_title("Candlestick chart", "Quantmod data")
+
+```
+
+
+## sankey 桑基
+
+```{r}
+sankey <- data.frame(
+  source = c("a", "b", "c", "d", "c"),
+  target = c("b", "c", "d", "e", "e"),
+  value = ceiling(rnorm(5, 10, 1)),
+  stringsAsFactors = FALSE
+)
+
+sankey
+
+sankey %>% 
+  e_charts() %>% 
+  e_sankey(source, target, value) %>% 
+  e_title("Sankey chart")
+```
+
+## parallel
+
+```{r}
+df <- data.frame(
+  price = rnorm(5, 10),
+  amount = rnorm(5, 15),
+  letter = LETTERS[1:5]
+)
+
+df
+
+df %>% 
+  e_charts() %>% 
+  e_parallel(price, amount, letter) %>% 
+  e_title("Parallel chart")
+```
+
+
+
+# 3D
+
+## Bar 3D
+
+```{r}
+v <- LETTERS[1:10]
+matrix <- data.frame(
+  x = sample(v, 300, replace = TRUE), 
+  y = sample(v, 300, replace = TRUE), 
+  z1 = rnorm(300, 10, 1),
+  z2 = rnorm(300, 10, 1),
+  color = rnorm(300, 10, 1),
+  size = rnorm(300, 10, 1),
+  stringsAsFactors = FALSE
+) %>% 
+  dplyr::group_by(x, y) %>% 
+  dplyr::summarise(
+    z1 = sum(z1),
+    z2 = sum(z2),
+    color = sum(color),
+    size = sum(size)
+  ) %>% 
+  dplyr::ungroup() 
+matrix
+  
+trans <- list(opacity = 0.4) # transparency
+emphasis <- list(itemStyle = list(color = "#313695"))
+  
+matrix %>% 
+  e_charts(x) %>% 
+  e_bar_3d(y, z1, stack = "stack", name = "Serie 1", itemStyle = trans, emphasis = emphasis) %>%
+  e_bar_3d(y, z2, stack = "stack", name = "Serie 2", itemStyle = trans, emphasis = emphasis) %>% 
+  e_legend()
+```
+
+
+
+## Scatter 3D
+
+```{r}
+matrix %>% 
+  e_charts(x) %>% 
+  e_scatter_3d(y, z1, size, color) %>% 
+  e_visual_map(
+    size,
+    inRange = list(symbolSize = c(1, 30)), # scale size
+    dimension = 3 # third dimension 0 = x, y = 1, z = 2, size = 3
+  ) %>% 
+  e_visual_map(
+    color,
+    inRange = list(color = c('#bf444c', '#d88273', '#f6efa6')), # scale colors
+    dimension = 4, # third dimension 0 = x, y = 1, z = 2, size = 3, color = 4
+    bottom = 300 # padding to avoid visual maps overlap
+  )
+```
+
+
+## Line 3D
+
+```{r}
+df <- data.frame(
+  x = 1:100,
+  y = runif(100, 10, 25),
+  z = rnorm(100, 100, 50)
+)
+
+df %>% 
+  e_charts(x) %>% 
+  e_line_3d(y, z, smooth = TRUE) %>% 
+  e_visual_map()
+```
+
+
+# Timeline 的应用
+
+```{r}
+# fake data
+df <- data.frame(
+  year = c(
+    rep(2016, 25),
+    rep(2017, 25),
+    rep(2018, 25),
+    rep(2019, 25)
+  ),
+  x = rnorm(100),
+  y = rnorm(100),
+  grp = c(
+    rep("A", 50),
+    rep("B", 50)
+  )
+) 
+df
+
+df %>%
+  group_by(year) %>% 
+  e_charts(x, timeline = T) %>% 
+  e_scatter(y, symbol_size = 5)
+
+df %>%
+  group_by(year) %>% 
+  e_charts(x, timeline = T) %>% 
+  e_scatter(y, symbol_size = 5) %>% 
+  e_lm(y ~ x)
+
+
+df %>%
+  group_by(year) %>% 
+  e_charts(x, timeline = T) %>% 
+  e_scatter(y, symbol_size = 5) %>% 
+  e_datazoom() %>%
+  e_loess(y ~ x)
+
+```
+
+
+## map timeline
+
+```{r}
+df <- USArrests
+
+# scale 0 to 1
+.scl <- function(x){
+    (x - min(x)) / (max(x) - min(x))
+}
+
+df %>% 
+  mutate(
+      State = row.names(.),
+      Rape = .scl(Rape),
+      Murder = .scl(Murder),
+      Assault = .scl(Assault)
+  ) %>% 
+  select(State, Rape, Murder, Assault) %>% 
+  # group_by(State) %>% 
+  # tidyr::gather("Key",  "Value", Murder, Rape, Assault) %>% 
+  pivot_longer(
+    -c(State),
+    names_to = "Key",
+    values_to = "Value"
+  ) %>% 
+  group_by(Key) %>% 
+  e_charts(State, timeline = TRUE) %>% 
+  em_map("USA") %>% 
+  e_map(Value, map = "USA") %>% 
+  e_visual_map(min = 0, max = 1) %>% 
+  e_timeline_opts(autoPlay = TRUE) %>% 
+  e_timeline_serie(
+    title = list(
+      list(text = "Assault", subtext = "Percentage based on arrests"),
+      list(text = "Murder", subtext = "Percentage based on arrests"),
+      list(text = "Rape", subtext = "Percentage based on arrests")
+    )
+  )
+```
+
+
+
+## 利用timeline实现动态条形图，效果相比gganimate要好些
+
+![示例链接](https://github.com/rdatasculptor/barchase/blob/main/barchartrace.R)
+
+```{r}
+
+```
+
