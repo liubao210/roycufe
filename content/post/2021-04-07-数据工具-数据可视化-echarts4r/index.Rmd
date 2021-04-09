@@ -7,6 +7,9 @@ categories:
   - R
 tags:
   - viz
+output: 
+  html_document: 
+    highlight: tango
 ---
 
 

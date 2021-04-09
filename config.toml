@@ -1,7 +1,7 @@
 baseURL = "/"
 title = "数の舍"
 theme = "hugo-theme-m10c"
-paginate = 10
+paginate = 5
 
 [menu]
   [[menu.main]]
