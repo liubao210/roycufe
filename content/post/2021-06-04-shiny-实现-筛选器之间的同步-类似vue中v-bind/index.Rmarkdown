@@ -12,6 +12,7 @@ tags:
 ## 废话不多说，直接看代码
 ### 实现筛选器选择结果一致，任何一方改动都会同步到另一个筛选器；
 
+
 ```{r eval=FALSE}
 library(shiny)
 
@@ -28,7 +29,6 @@ server <- function(input, output, session) {
   observe({
     
     observeEvent(input$inSelect1, {
-      print("observe1")
       if(input$inSelect1 != input$inSelect2){
         updateSelectInput(session, "inSelect2",
                           selected = input$inSelect1
@@ -37,7 +37,6 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$inSelect2, {
-      print("observe2")
       if(input$inSelect1 != input$inSelect2){
         updateSelectInput(session, "inSelect1",
                           selected = input$inSelect2
