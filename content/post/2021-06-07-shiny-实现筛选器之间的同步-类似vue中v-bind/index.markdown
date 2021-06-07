@@ -20,7 +20,6 @@ library(shiny)
 
 
 ui <- fluidPage(
-  p("The checkbox group controls the select input"),
   selectInput("inSelect1", "Select input",
               c("Item A", "Item B", "Item C")),
   selectInput("inSelect2", "Select input",
